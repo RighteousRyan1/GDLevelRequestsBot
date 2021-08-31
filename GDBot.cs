@@ -10,43 +10,51 @@ using Microsoft.Extensions.DependencyInjection;
 using GDRequestsBot.Modules;
 using System.Net;
 using System.Net.NetworkInformation;
+using Geometric;
+using Geometric.Data;
+using Geometric.Data.Parsed;
+using Geometric.Data.Raw;
+using Geometric.Data.Parsed.Levels;
+using Geometric.Web;
+using System.Linq;
 
 namespace GDRequestsBot
 {
-    class GDBot
+    public class GDBot
     {
         public static string prefix = "-";
         public static GDBot Instance { get; private set; }
 
-        internal static string ManagementPath => Directory.GetCurrentDirectory().Remove(Directory.GetCurrentDirectory().Length - @"\bin\Debug\net5.0".Length);
+        public static SocketGuild PharaohsDen;
 
-        private GDBot()
-        {
-            Instance = this;
-        }
+        public static Emote[] emotes;
+
+        internal static string ManagementPath => Directory.GetCurrentDirectory().Remove(Directory.GetCurrentDirectory().Length - @"\bin\Debug\net5.0".Length);
 
         static void Main()
         {
             #region Setup
+            Instance = new();
+            // GetResources();
             if (File.ReadAllLines(ManagementPath + "/storedchannel.txt").Length > 0)
             {
                 if (ulong.TryParse(File.ReadAllLines(ManagementPath + "/storedchannel.txt")[0], out var id))
                 {
-                    CommandRequests.reqChannelId = id;
+                    CommandHandler.reqChannelId = id;
                 }
             }
             if (File.ReadAllLines(ManagementPath + "/acceptchannel.txt").Length > 0)
             {
                 if (ulong.TryParse(File.ReadAllLines(ManagementPath + "/acceptchannel.txt")[0], out var id))
                 {
-                    CommandRequests.channelToAcceptRequestsFrom = id;
+                    CommandHandler.channelToAcceptRequestsFrom = id;
                 }
             }
-            new GDBot().RunAsync().GetAwaiter().GetResult();
+            Instance.RunAsync().GetAwaiter().GetResult();
             #endregion
         }
 
-        internal DiscordSocketClient _client;
+        internal DiscordSocketClient client;
         private CommandService _commands;
         private IServiceProvider _serviceProvider;
 
@@ -54,25 +62,25 @@ namespace GDRequestsBot
 
         public async Task RunAsync()
         {
-            _client = new();
+            client = new();
             _commands = new();
 
-            await _client.SetActivityAsync(new Game("Geometry Dash levels", ActivityType.Playing, ActivityProperties.None));
-            await _client.SetStatusAsync(UserStatus.Online);
+            await client.SetActivityAsync(new Game("Geometry Dash levels", ActivityType.Playing, ActivityProperties.None));
+            await client.SetStatusAsync(UserStatus.Online);
 
-            _serviceProvider = new ServiceCollection().AddSingleton(_client).AddSingleton(_commands).BuildServiceProvider();
+            _serviceProvider = new ServiceCollection().AddSingleton(client).AddSingleton(_commands).BuildServiceProvider();
 
             #region Token
             string tkn = File.ReadAllText(ManagementPath + "/token.txt");
             #endregion
 
-            _client.Log += Logging;
+            client.Log += Logging;
 
             await RegisterCommands();
 
-            await _client.LoginAsync(TokenType.Bot, tkn);
+            await client.LoginAsync(TokenType.Bot, tkn);
 
-            await _client.StartAsync();
+            await client.StartAsync();
 
             await Task.Delay(-1);
         }
@@ -85,14 +93,14 @@ namespace GDRequestsBot
 
         public async Task RegisterCommands()
         {
-            _client.MessageReceived += CommandHandle;
+            client.MessageReceived += CommandHandle;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
         }
 
         private async Task CommandHandle(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
-            var context = new SocketCommandContext(_client, message);
+            var context = new SocketCommandContext(client, message);
             if (message.Author.IsBot)
                 return;
 
