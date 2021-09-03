@@ -32,9 +32,9 @@ namespace GDRequestsBot.Modules
                 GDBot.PharaohsDen.Emotes.First(x => x.Id == 881516084900003860), // large 6
                 GDBot.PharaohsDen.Emotes.First(x => x.Id == 881515893358739466), // gd coin 7
                 GDBot.PharaohsDen.Emotes.First(x => x.Id == 881516098380521484), // silver coin 8
-                GDBot.PharaohsDen.Emotes.First(x => x.Id == 881516047033827408), // diamond 9
+                /*GDBot.PharaohsDen.Emotes.First(x => x.Id == 881516047033827408), // diamond 9
                 GDBot.PharaohsDen.Emotes.First(x => x.Id == 881515910307938354), // demon 10
-                GDBot.PharaohsDen.Emotes.First(x => x.Id == 870788766376296548) // cp 11
+                GDBot.PharaohsDen.Emotes.First(x => x.Id == 870788766376296548)*/ // cp 11
             };
         }
 
@@ -71,9 +71,9 @@ namespace GDRequestsBot.Modules
                     .WithColor(U_Discord.RandomColor())
                     .WithTitle("Level Submitted!")
                     .WithUrl("https://gdbrowser.com/" + id)
-                    .WithImageUrl("https://gdbrowser.com/assets/difficulties/" + level.StandardLevelData.DifficultyFace + ".png")
                     .WithFooter(footer =>
                     {
+                        footer.WithIconUrl("https://gdbrowser.com/assets/difficulties/" + level.StandardLevelData.DifficultyFace + ".png");
                         footer.WithText("I will DM you with suggestions and details if I get to your level!");
                     });
                 await Context.Message.AddReactionAsync(new Emoji("✅"));
@@ -197,15 +197,6 @@ namespace GDRequestsBot.Modules
             await ReplyAsync($"Review successfully sent to user.");
 
             // make these separate steps when done
-        }
-
-        [Command("")]
-        public async Task GetAuthorStats(string levelId)
-        {
-            if (int.TryParse(levelId, out var id))
-            {
-
-            }
         }
     }
 }
